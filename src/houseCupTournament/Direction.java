@@ -12,5 +12,4 @@ package houseCupTournament;
  */
 public enum Direction {
     UP, DOWN, LEFT, RIGHT;
-    
 }

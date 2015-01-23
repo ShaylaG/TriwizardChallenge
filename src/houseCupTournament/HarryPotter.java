@@ -18,12 +18,14 @@ import java.util.ArrayList;
  * @author Shayla
  */
 public class HarryPotter {
+    static HarryPotter java;
 
     private final int HEAD_POSITION = 0;
     private LocationValidatorIntf locationValidator;
     private boolean paused;
     private Image segmentImage;
     private int growthCounter;
+    private Score score;
 
     public void move() {
 
@@ -57,6 +59,17 @@ public class HarryPotter {
         }
 
     }
+    public boolean selfHit(){
+        for (int i = 1; i < this.body.size(); i++){
+            if (this.getHead().equals (this.body.get(i))){
+            System.out.println("HIT = "+ getHead());
+           
+            return true;
+            }
+        }
+        return false;
+    
+}
 
     public Point getHead() {
         return body.get(HEAD_POSITION);

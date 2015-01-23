@@ -7,7 +7,6 @@ package houseCupTournament;
 
 import audio.AudioPlayer;
 import environment.Environment;
-import environment.GraphicsPalette;
 import environment.LocationValidatorIntf;
 import grid.Grid;
 import images.ResourceTools;
@@ -18,7 +17,6 @@ import java.awt.Point;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import org.omg.CORBA.OBJECT_NOT_EXIST;
 
 /**
  *
@@ -29,12 +27,16 @@ class HouseCupTournamentEviornment extends Environment implements GridDrawData, 
     Grid grid;
     private HarryPotter harryPotter;
     private Score score;
+    private int level;
+    private final int HEAD_POSITION = 0;
 
-    private final int SLOW_SPEED = 7;
-    private final int MEDIUM_SPEED = 5;
-    private final int HIGH_SPEED = 3;
+    private final int SLOW_SPEED = 3;
+    private final int MEDIUM_SPEED = 2;
+    private final int HIGH_SPEED = 1;
 
-    private int moveDelayLimit = HIGH_SPEED;
+    private int slowSpeed = SLOW_SPEED;
+    private int mediumSpeed = MEDIUM_SPEED;
+    private int highSpeed = HIGH_SPEED;
     private int moveDelayCounter = 0;
 
     private ArrayList<GridObject> gridObjects;
@@ -42,6 +44,7 @@ class HouseCupTournamentEviornment extends Environment implements GridDrawData, 
 
     private Image guitar;
     private Image musicNote;
+    private GameState gameState = GameState.PLAYING;
 
     public HouseCupTournamentEviornment() {
     }
@@ -49,11 +52,12 @@ class HouseCupTournamentEviornment extends Environment implements GridDrawData, 
     @Override
     public void initializeEnvironment() {
         score = new Score();
-        score.setPosition(new Point(10,50));
-        guitar = ResourceTools.loadImageFromResource("resources/Guitar.png");
+        score.setPosition(new Point(10, 50));
+        guitar = ResourceTools.loadImageFromResource("resources/guitar.jpeg");
         musicNote = ResourceTools.loadImageFromResource("resources/MusicNote.png");
 
-        this.setBackground(ResourceTools.loadImageFromResource("resources/DragonChallenge.jpg").getScaledInstance(900, 525, Image.SCALE_FAST));
+//        this.setBackground(ResourceTools.loadImageFromResource("resources/DragonChallenge.jpg").getScaledInstance(900, 525, Image.SCALE_FAST));
+        setLevel(1);
         grid = new Grid(35, 20, 25, 25, new Point(10, 20), Color.RED);
 
         harryPotter = new HarryPotter();
@@ -70,18 +74,17 @@ class HouseCupTournamentEviornment extends Environment implements GridDrawData, 
         harryPotter.setBody(body);
 
         gridObjects = new ArrayList<>();
-        gridObjects.add(new GridObject(GridObjectType.MUSIC_NOTE, getRandomPoint()));
-         gridObjects.add(new GridObject(GridObjectType.GUITAR, getRandomPoint()));
-         AudioPlayer.play("/resources/AccioGuitar.wav");
+//        gridObjects.add(new GridObject(GridObjectType.MUSIC_NOTE, getRandomPoint()));
+        gridObjects.add(new GridObject(GridObjectType.GUITAR, getRandomPoint()));
+        AudioPlayer.play("/resources/AccioGuitar.wav");
 
     }
 
-    @Override
     public void timerTaskHandler() {
         if (harryPotter != null) {
             //if counter > = limit then reset counter and move snake
             //else increment counter
-            if (this.moveDelayCounter >= this.moveDelayLimit) {
+            if (this.moveDelayCounter >= this.slowSpeed) {
                 moveDelayCounter = 0;
                 harryPotter.move();
             } else {
@@ -114,6 +117,12 @@ class HouseCupTournamentEviornment extends Environment implements GridDrawData, 
             harryPotter.grow(2);
         } else if (e.getKeyCode() == KeyEvent.VK_M) {
             AudioPlayer.play("/resources/HeyDragon.wav");
+        } else if (e.getKeyCode() == KeyEvent.VK_1) {
+            setLevel(1);
+        } else if (e.getKeyCode() == KeyEvent.VK_2) {
+            setLevel(2);
+        } else if (e.getKeyCode() == KeyEvent.VK_3) {
+            setLevel(3);
         }
 
     }
@@ -129,39 +138,51 @@ class HouseCupTournamentEviornment extends Environment implements GridDrawData, 
 
     @Override
     public void paintEnvironment(Graphics graphics) {
-        if (grid != null) {
-            grid.paintComponent(graphics);
-        }
+        switch (gameState) {
+            case MENU:
 
-        if (harryPotter != null) {
-            harryPotter.draw(graphics);
-        }
+                break;
+            case PLAYING:
 
-        if (gridObjects != null) {
-            for (GridObject gridObject : gridObjects) {
-                if (gridObject.getType() == GridObjectType.GUITAR) {
-                    graphics.drawImage(guitar, grid.getCellSystemCoordinate(gridObject.getLocation()).x,
-                            grid.getCellSystemCoordinate(gridObject.getLocation()).y,
-                            getCellWidth(), getCellHeight(), this);
-
-                } 
-                else if (gridObject.getType() == GridObjectType.MUSIC_NOTE) {
-                    graphics.drawImage(musicNote, grid.getCellSystemCoordinate(gridObject.getLocation()).x,
-                            grid.getCellSystemCoordinate(gridObject.getLocation()).y,
-                            getCellWidth(), getCellHeight(), this);
-
+                if (grid != null) {
+//            grid.paintComponent(graphics);
                 }
 
-            }
-        }
-        if (score != null){
-            score.draw(graphics);
+                if (harryPotter != null) {
+                    harryPotter.draw(graphics);
+                }
+
+                if (gridObjects != null) {
+                    for (GridObject gridObject : gridObjects) {
+                        if (gridObject.getType() == GridObjectType.GUITAR) {
+                            graphics.drawImage(guitar, grid.getCellSystemCoordinate(gridObject.getLocation()).x,
+                                    grid.getCellSystemCoordinate(gridObject.getLocation()).y,
+                                    getCellWidth(), getCellHeight(), this);
+
+                        } else if (gridObject.getType() == GridObjectType.MUSIC_NOTE) {
+                            graphics.drawImage(musicNote, grid.getCellSystemCoordinate(gridObject.getLocation()).x,
+                                    grid.getCellSystemCoordinate(gridObject.getLocation()).y,
+                                    getCellWidth(), getCellHeight(), this);
+
+                        }
+
+                    }
+                }
+                
+                if (score != null) {
+                    score.draw(graphics);
+                }
+
+                break;
+
+            case OVER:
+
         }
     }
 
     public Point getRandomPoint() {
-        return new Point((int) (grid.getRows() * Math.random()), (int) (grid.getColumns() * Math.random()));
-
+//        return new Point((int) (grid.getRows() * Math.random()), (int) (grid.getColumns() * Math.random()));
+        return new Point((int) (grid.getColumns() * Math.random()), (int) (grid.getRows() * Math.random()));
     }
 
 //<editor-fold defaultstate="collapsed" desc="GridDrawData Interface">
@@ -182,12 +203,11 @@ class HouseCupTournamentEviornment extends Environment implements GridDrawData, 
     }
 
 //</editor-fold>
-    
-    
 //<editor-fold defaultstate="collapsed" desc="LocationValidatorIntf">
     @Override
     public Point validateLocation(Point point) {
 
+        harryPotter.selfHit();
         if (point.x >= this.grid.getColumns()) {
             point.x = 0;
         } else if (point.x < 0) {
@@ -205,7 +225,7 @@ class HouseCupTournamentEviornment extends Environment implements GridDrawData, 
         //look at all the locations stored in the gridObject
         //for each compare it to the head location stored
         //in the point parameter
-               int newNotes = 0;
+        int newNotes = 0;
 //                    
 ///       for (int i = 0; i < newNotes; i++) {
 //            gridObjects.add(new GridObject(GridObjectType.MUSIC_NOTE, getRandomPoint()));
@@ -214,30 +234,105 @@ class HouseCupTournamentEviornment extends Environment implements GridDrawData, 
         for (GridObject object : gridObjects) {
             if (object.getLocation().equals(point)) {
                 System.out.println("Hit = " + object.getType());
+                HarryPotter HarryPotter = null;
 //                object.getLocation().x = -200;
                 if (object.getType() == GridObjectType.GUITAR) {
 //                    object.setLocation(this.getRandomPoint());
                     object.getLocation().move(1000000000, 1000000000);
                     AudioPlayer.play("/resources/HeyDragon.wav");
-                    harryPotter.grow(2);
                     newNotes++;
-                } 
-                else if (object.getType() == GridObjectType.MUSIC_NOTE) {
-                    harryPotter.grow(2);
+                } else if (object.getType() == GridObjectType.MUSIC_NOTE) {
+                    harryPotter.grow(1);
                     object.setLocation(this.getRandomPoint());
+                    this.score.addToValue(5);
 
                 }
+//                  
 
             }
         }
-        
-         for (int i = 0; i < newNotes; i++) {
+
+        for (int i = 0; i < newNotes; i++) {
             gridObjects.add(new GridObject(GridObjectType.MUSIC_NOTE, getRandomPoint()));
-            harryPotter.grow(2);
-         }
+
+        }
 
         // check if the snake hit itself!!!!!
         return point;
+    }
+
+    /**
+     * @return the level
+     */
+    public int getLevel() {
+        return level;
+    }
+
+    /**
+     * @param level the level to set
+     */
+    public void setLevel(int level) {
+
+        if (this.level != level) {
+            if (level == 1) {
+                this.setBackground(ResourceTools.loadImageFromResource("resources/DragonChallenge.jpg").getScaledInstance(900, 525, Image.SCALE_FAST));
+
+            } else if (level == 2) {
+                this.setBackground(ResourceTools.loadImageFromResource("resources/BallroomFloor.jpeg").getScaledInstance(900, 525, Image.SCALE_FAST));
+                AudioPlayer.play("/resources/GrangerDanger.wav");
+
+                if (harryPotter != null) {
+//if counter > = limit then reset counter and move snake
+//else increment counter
+                    if (this.moveDelayCounter >= this.mediumSpeed) {
+                        moveDelayCounter = 0;
+                        harryPotter.move();
+                    } else {
+                        moveDelayCounter++;
+                    }
+
+                }
+
+            } else if (level == 3) {
+                this.setBackground(ResourceTools.loadImageFromResource("resources/Graveyard.jpeg").getScaledInstance(900, 525, Image.SCALE_FAST));
+                AudioPlayer.play("/resources/DanceAgain.wav");
+
+                if (harryPotter != null) {
+                    //if counter > = limit then reset counter and move snake
+                    //else increment counter
+                    if (this.moveDelayCounter >= this.highSpeed) {
+                        moveDelayCounter = 0;
+                        harryPotter.move();
+                    } else {
+                        moveDelayCounter++;
+                    }
+
+                }
+            }
+        }
+
+        this.level = level;
+
+    }
+
+    private GridObjectType getClass(HarryPotter harryPotter) {
+        this.harryPotter = HarryPotter.java;
+        return null;
+
+    }
+
+    /**
+     * @return the GameState
+     */
+    public GameState getGameState() {
+        return gameState;
+    }
+
+    /**
+     * @param GameState the GameState to set
+     */
+    public void setGameState(GameState GameState) {
+        this.gameState = GameState;
     }
 
 }

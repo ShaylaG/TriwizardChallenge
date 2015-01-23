@@ -22,7 +22,7 @@ public class Score {
     public void draw(Graphics graphics) {
      graphics.setColor(Color.WHITE);
      graphics.setFont(font);
-        graphics.drawString("Score;" + value, position.x, position.y);
+        graphics.drawString("Score:" + value, position.x, position.y);
     }
 
     //<editor-fold defaultstate="collapsed" desc="GettersAndSetters">
